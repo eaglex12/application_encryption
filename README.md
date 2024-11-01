@@ -1,98 +1,37 @@
-# Encryption Service
+Encryption and Decryption Process Overview
 
-This is a simple encryption service built with NestJS that provides methods to securely encrypt and decrypt data using AES-256-CBC encryption.
+This document explains the encryption and decryption process used in the EncryptionService implemented with NestJS, utilizing the AES-256-CBC algorithm.
 
-## Features
+1. **Encryption Process:**
 
-- AES-256-CBC encryption algorithm
-- Dynamic initialization vector (IV) for each encryption
-- Secure handling of encryption keys
-- Error handling during decryption
+   a. **Algorithm**: The encryption uses the AES-256-CBC (Advanced Encryption Standard with a key size of 256 bits and Cipher Block Chaining mode) which is a symmetric encryption algorithm. This means the same key is used for both encryption and decryption.
 
-## Installation
+   b. **Key Generation**: The encryption key is a critical component and should be kept secure. In this implementation, the key is read from environment variables as a 64-character hexadecimal string representing a 32-byte key.
 
-To use the `EncryptionService`, ensure you have a NestJS project set up. Then, add the `EncryptionService` to your module.
+   c. **Initialization Vector (IV)**: For each encryption operation, a unique IV is generated. The IV is a random 16-byte value that ensures that the same plaintext encrypts to different ciphertexts each time, enhancing security by preventing patterns in encrypted data.
 
-```bash
-npm install --save @nestjs/common
-```
+   d. **Encrypting Data**: The `encrypt` method performs the following steps:
+      - It takes the plaintext (the data to be encrypted) as input.
+      - A random IV is generated for the encryption.
+      - The data is encrypted using the AES-256-CBC algorithm with the provided key and generated IV.
+      - The method returns an object containing both the IV and the encrypted data in hexadecimal format.
 
-## Configuration
+2. **Decryption Process:**
 
-Before using the `EncryptionService`, set the encryption key in your environment variables. The key should be a 64-character hexadecimal string representing a 32-byte key.
+   a. **Receiving Encrypted Data**: The decryption process requires both the IV and the encrypted data. The IV must match the one used during encryption to successfully retrieve the original plaintext.
 
-```plaintext
-ENCRYPTION_KEY=<your-64-character-hexadecimal-key>
-```
+   b. **Decrypting Data**: The `decrypt` method performs the following steps:
+      - It accepts the IV and the encrypted data as inputs.
+      - The IV is converted from a hexadecimal string to a buffer format.
+      - A deciphering object is created using the same AES-256-CBC algorithm, the original key, and the provided IV.
+      - The encrypted data is decrypted back into its original plaintext form.
 
-## Usage
+   c. **Error Handling**: The decryption process includes error handling to check for invalid input values, such as incorrect IV lengths. If an error occurs, it logs the error message and throws a new user-friendly error.
 
-### Importing the Service
+3. **Security Considerations**:
 
-Import the `EncryptionService` in your desired module.
+   - Always ensure the encryption key is kept secret and secure. It should not be hard-coded in the source code.
+   - The IV should be unique for each encryption operation to maintain the confidentiality of the data.
+   - It is advisable to use additional security measures and best practices when handling sensitive information, such as secure storage solutions for encryption keys.
 
-```typescript
-import { Module } from "@nestjs/common";
-import { EncryptionService } from "./encryption.service";
-
-@Module({
-	providers: [EncryptionService],
-	exports: [EncryptionService],
-})
-export class AppModule {}
-```
-
-### Encrypting Data
-
-You can encrypt data by calling the `encrypt` method, which returns an object containing the IV and the encrypted data.
-
-```typescript
-import { EncryptionService } from "./encryption.service";
-
-@Injectable()
-export class SomeService {
-	constructor(private readonly encryptionService: EncryptionService) {}
-
-	encryptData(text: string) {
-		const { iv, encryptedData } = this.encryptionService.encrypt(text);
-		// Use the IV and encrypted data as needed
-	}
-}
-```
-
-### Decrypting Data
-
-To decrypt data, use the `decrypt` method. You'll need to provide the IV and the encrypted data.
-
-```typescript
-import { EncryptionService } from "./encryption.service";
-
-@Injectable()
-export class SomeService {
-	constructor(private readonly encryptionService: EncryptionService) {}
-
-	decryptData(iv: string, encryptedData: string) {
-		try {
-			const decryptedText = this.encryptionService.decrypt(iv, encryptedData);
-			// Use the decrypted text as needed
-		} catch (error) {
-			console.error("Decryption failed:", error.message);
-			// Handle the error appropriately
-		}
-	}
-}
-```
-
-## Error Handling
-
-The `decrypt` method includes error handling to ensure that invalid inputs do not cause unhandled exceptions. If decryption fails, it will log the error message and throw a new error with a user-friendly message.
-
-## Important Notes
-
-- Always store your encryption key securely and never hard-code it in your application.
-- Ensure that the IV is unique for each encryption operation to maintain the security of your data.
-- This service is suitable for basic encryption needs but may require additional security measures for highly sensitive information.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+By using this encryption and decryption process, the application ensures that sensitive data remains protected against unauthorized access, maintaining data confidentiality and integrity.
